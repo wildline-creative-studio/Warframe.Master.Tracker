@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Warframe Master Companion</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0d12">
+  <style>
+    :root {
+      --bg: #0a0d12;
+      --card-bg: rgba(18, 24, 32, 0.85);
+      --card-border: #1e293b;
+      --accent-cyan: #00d2ff;
+      --gold: #f39c12;
+      --gold-glowing: rgba(243, 156, 18, 0.4);
+      --text: #e0e6ed;
+      --text-muted: #94a3b8;
+      --danger: #ff4757;
+      --success: #2ed573;
+      --bottom-nav-height: 65px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding-bottom: calc(var(--bottom-nav-height) + 20px);
+      min-height: 100vh;
+    }
+
+    /* Top Sticky Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 13, 18, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 16px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mr-badge {
+      background: linear-gradient(135deg, var(--gold), #d35400);
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    /* Ticker / Bar Status */
+    .status-ticker {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-top: 8px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .status-ticker::-webkit-scrollbar { display: none; }
+
+    .ticker-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .ticker-item span { color: var(--accent-cyan); font-weight: 600; }
+
+    /* Main Container & Sections */
+    main {
+      padding: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      color: var(--accent-cyan);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Cards & Grids */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* Controls & Toggles */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chip.active {
+      background: rgba(0, 210, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .counter-btn {
+      background: #1e293b;
+      color: #fff;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .search-bar {
+      width: 100%;
+      background: #121820;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
+
+    /* Live Fissure Cards */
+    .fissure-card {
+      border-left: 4px solid var(--accent-cyan);
+    }
+    .fissure-card.sp { border-left-color: var(--danger); }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--bottom-nav-height);
+      background: rgba(10, 13, 18, 0.98);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 20%;
+    }
+
+    .nav-item.active {
+      color: var(--accent-cyan);
+    }
+
+    .nav-icon {
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="header-top">
+      <div class="logo">🪷 TENNO COMPANION</div>
+      <div class="mr-badge" id="mr-display">MR 0</div>
+    </div>
+    <div class="status-ticker" id="ticker">
+      <div class="ticker-item">Cetus: <span id="cetus-state">Loading...</span></div>
+      <div class="ticker-item">Fortuna: <span id="fortuna-state">Loading...</span></div>
+      <div class="ticker-item">Earth: <span id="earth-state">Loading...</span></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- TAB 1: DASHBOARD / LIVE WORLD -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="section-title">
+        <span>⚡ Live Void Fissures</span>
+        <button onclick="loadFissures()" style="background:none; border:none; color:var(--accent-cyan); font-size:0.8rem; cursor:pointer;">🔄 Refresh</button>
+      </div>
+      <div id="fissure-list" class="grid">
+        <div style="color:var(--text-muted);">Fetching live fissure data...</div>
+      </div>
+    </section>
+
+    <!-- TAB 2: WARFRAMES TRACKER -->
+    <section id="tab-warframes" class="tab-content">
+      <div class="section-title">
+        <span>🛡️ Warframes Matrix</span>
+      </div>
+      <input type="text" class="search-bar" id="wf-search" placeholder="Search Warframes..." onkeyup="filterWarframes()">
+      <div id="warframe-list" class="grid"></div>
+    </section>
+
+    <!-- TAB 3: WEAPONS TRACKER -->
+    <section id="tab-weapons" class="tab-content">
+      <div class="section-title">
+        <span>⚔️ Weapons Arsenal</span>
+      </div>
+      <input type="text" class="search-bar" id="weapon-search" placeholder="Search Primary, Secondary, Melee..." onkeyup="filterWeapons()">
+      <div id="weapon-list" class="grid"></div>
+    </section>
+
+    <!-- TAB 4: STAR CHART & STEEL PATH -->
+    <section id="tab-starchart" class="tab-content">
+      <div class="section-title">
+        <span>🌌 Star Chart Progress</span>
+      </div>
+      <div id="starchart-list" class="grid"></div>
+    </section>
+
+    <!-- TAB 5: CODEX & DROP TABLES -->
+    <section id="tab-codex" class="tab-content">
+      <div class="section-title">
+        <span>🔍 Drop Location Lookup</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <input type="text" id="drop-search-input" class="search-bar" style="margin-bottom:0;" placeholder="e.g., Khora Prime, Axi A1, Condition Overload">
+        <button onclick="searchDropTables()" style="background:var(--accent-cyan); border:none; padding:0 16px; border-radius:8px; font-weight:bold; cursor:pointer;">Search</button>
+      </div>
+      <div id="drop-results" class="grid"></div>
+    </section>
+  </main>
+
+  <!-- Bottom Navigation Dock -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('dashboard', this)">
+      <span class="nav-icon">⚡</span>
+      <span>Live</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('warframes', this)">
+      <span class="nav-icon">🛡️</span>
+      <span>Frames</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('weapons', this)">
+      <span class="nav-icon">⚔️</span>
+      <span>Weapons</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('starchart', this)">
+      <span class="nav-icon">🌌</span>
+      <span>Nodes</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('codex', this)">
+      <span class="nav-icon">🔍</span>
+      <span>Drops</span>
+    </button>
+  </nav>
+
+  <script>
+    const API = 'https://api.warframestat.us/pc';
+
+    // Local Storage Data Engine
+    let userData = JSON.parse(localStorage.getItem('tenno_companion_data')) || {
+      masteryXP: 0,
+      frames: {},
+      weapons: {},
+      starchart: {}
+    };
+
+    function saveData() {
+      localStorage.setItem('tenno_companion_data', JSON.stringify(userData));
+      calculateMR();
+    }
+
+    // Default Sample Data
+    const defaultWarframes = [
+      'Ash', 'Atlas', 'Banshee', 'Baruuk', 'Caliban', 'Chroma', 'Dagath', 'Ember', 'Excalibur', 'Frost',
+      'Gara', 'Gauss', 'Grendel', 'Gyre', 'Hildryn', 'Hydroid', 'Inaros', 'Ivara', 'Kullervo', 'Limbo',
+      'Loki', 'Mag', 'Mesa', 'Mirage', 'Nekros', 'Nezha', 'Nidus', 'Nova', 'Nyx', 'Oberon', 'Octavia',
+      'Protea', 'Revenant', 'Rhino', 'Saryn', 'Styanax', 'Trinity', 'Valkyr', 'Vauban', 'Volt', 'Wisp', 'Wukong', 'Yareli', 'Zephyr'
+    ];
+
+    const defaultPlanets = [
+      'Mercury', 'Venus', 'Earth', 'Mars', 'Phobos', 'Ceres', 'Jupiter', 'Europa', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'Sedna', 'Eris', 'Lua', 'Zariman', 'Albrecht Labs'
+    ];
+
+    // Navigation Logic
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Live World State
+    async function loadWorldState() {
+      try {
+        const [cetus, fortuna, earth] = await Promise.all([
+          fetch(`${API}/cetusState`).then(r => r.json()),
+          fetch(`${API}/vallisCycle`).then(r => r.json()),
+          fetch(`${API}/earthCycle`).then(r => r.json())
+        ]);
+
+        document.getElementById('cetus-state').innerText = `${cetus.state.toUpperCase()} (${cetus.timeLeft})`;
+        document.getElementById('fortuna-state').innerText = `${fortuna.state.toUpperCase()} (${fortuna.timeLeft})`;
+        document.getElementById('earth-state').innerText = `${earth.state.toUpperCase()} (${earth.timeLeft})`;
+      } catch (e) {
+        console.error('World state fetch failed:', e);
+      }
+    }
+
+    // Live Void Fissures
+    async function loadFissures() {
+      const container = document.getElementById('fissure-list');
+      container.innerHTML = '<div style="color:var(--text-muted);">Updating fissures...</div>';
+      try {
+        const res = await fetch(`${API}/fissures`);
+        const fissures = await res.json();
+        const active = fissures.filter(f => !f.expired);
+
+        container.innerHTML = active.map(f => `
+          <div class="card fissure-card ${f.isHard ? 'sp' : ''}">
+            <div class="card-header">
+              <span style="color:var(--gold); font-weight:bold;">${f.tier}</span>
+              <span style="font-size:0.8rem; color:var(--accent-cyan);">${f.eta} left</span>
+            </div>
+            <div class="card-title">${f.node}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              ${f.missionType} • ${f.enemy} ${f.isHard ? '• <strong style="color:var(--danger)">Steel Path</strong>' : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = 'Failed to load fissure data.';
+      }
+    }
+
+    // Render Warframes
+    function renderWarframes() {
+      const container = document.getElementById('warframe-list');
+      container.innerHTML = defaultWarframes.map(name => {
+        const state = userData.frames[name] || { bp: false, neuro: false, chassis: false, sys: false, mastered: false };
+        return `
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">${name}</span>
+              <button class="chip ${state.mastered ? 'active' : ''}" onclick="toggleMastery('frames', '${name}')">
+                ${state.mastered ? '✓ Mastered' : 'Rank 30'}
+              </button>
+            </div>
+            <div class="checkbox-group">
+              <span class="chip ${state.bp ? 'active' : ''}" onclick="togglePart('${name}', 'bp')">BP</span>
+              <span class="chip ${state.neuro ? 'active' : ''}" onclick="togglePart('${name}', 'neuro')">Neuro</span>
+              <span class="chip ${state.chassis ? 'active' : ''}" onclick="togglePart('${name}', 'chassis')">Chassis</span>
+              <span class="chip ${state.sys ? 'active' : ''}" onclick="togglePart('${name}', 'sys')">Systems</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function togglePart(frame, part) {
+      if (!userData.frames[frame]) userData.frames[frame] = {};
+      userData.frames[frame][part] = !userData.frames[frame][part];
+      saveData();
+      renderWarframes();
+    }
+
+    function toggleMastery(type, name) {
+      if (!userData[type][name]) userData[type][name] = {};
+      userData[type][name].mastered = !userData[type][name].mastered;
+      saveData();
+      renderWarframes();
+    }
+
+    // Render Star Chart
+    function renderStarChart() {
+      const container = document.getElementById('starchart-list');
+      container.innerHTML = defaultPlanets.map(planet => {
+        const completed = userData.starchart[planet] || false;
+        return `
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">${planet}</span>
+              <button class="chip ${completed ? 'active' : ''}" onclick="togglePlanet('${planet}')">
+                ${completed ? 'Cleared' : 'Incomplete'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function togglePlanet(planet) {
+      userData.starchart[planet] = !userData.starchart[planet];
+      saveData();
+      renderStarChart();
+    }
+
+    // Live Drop Table Search
+    async function searchDropTables() {
+      const query = document.getElementById('drop-search-input').value.trim();
+      const resultsDiv = document.getElementById('drop-results');
+      if (!query) return;
+
+      resultsDiv.innerHTML = '<div style="color:var(--text-muted);">Searching drop tables...</div>';
+      try {
+        const res = await fetch(`https://api.warframestat.us/drops/search/${encodeURIComponent(query)}`);
+        const drops = await res.json();
+
+        if (!drops || drops.length === 0) {
+          resultsDiv.innerHTML = 'No drop locations found.';
+          return;
+        }
+
+        const top = drops.sort((a, b) => b.chance - a.chance).slice(0, 12);
+        resultsDiv.innerHTML = top.map(d => `
+          <div class="card">
+            <div class="card-title" style="font-size:0.85rem;">${d.item}</div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">${d.place}</div>
+            <div style="color:var(--gold); font-size:0.8rem; font-weight:bold; margin-top:4px;">
+              ${d.chance.toFixed(2)}% (${d.rarity})
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        resultsDiv.innerHTML = 'Error fetching drop data.';
+      }
+    }
+
+    // Mastery Rank Calculator Engine
+    function calculateMR() {
+      let totalXP = 0;
+      Object.keys(userData.frames).forEach(f => {
+        if (userData.frames[f].mastered) totalXP += 6000;
+      });
+      const mr = Math.floor(Math.sqrt(totalXP / 2500));
+      document.getElementById('mr-display').innerText = `MR ${mr}`;
+    }
+
+    // Filter Helper Functions
+    function filterWarframes() {
+      const q = document.getElementById('wf-search').value.toLowerCase();
+      document.querySelectorAll('#warframe-list .card').forEach(card => {
+        const title = card.querySelector('.card-title').innerText.toLowerCase();
+        card.style.display = title.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    // Init App
+    loadWorldState();
+    loadFissures();
+    renderWarframes();
+    renderStarChart();
+    calculateMR();
+    setInterval(loadWorldState, 60000);
+  </script>
+</body>
+</html>
